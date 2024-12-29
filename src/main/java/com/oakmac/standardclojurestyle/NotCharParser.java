@@ -1,6 +1,6 @@
 package com.oakmac.standardclojurestyle;
 
-public class NotCharParser {
+public class NotCharParser implements IParser {
     private final char excludedChar;
     private final String name;
 
@@ -9,6 +9,7 @@ public class NotCharParser {
         this.name = name;
     }
 
+    @Override
     public Node parse(String input, int startIdx) {
         if (input == null || input.isEmpty() || startIdx >= input.length()) {
             return null;

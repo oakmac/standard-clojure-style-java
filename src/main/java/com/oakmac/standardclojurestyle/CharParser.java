@@ -1,6 +1,6 @@
 package com.oakmac.standardclojurestyle;
 
-public class CharParser {
+public class CharParser implements IParser {
     private final char expectedChar;
     private final String name;
 
@@ -9,6 +9,7 @@ public class CharParser {
         this.name = name;
     }
 
+    @Override
     public Node parse(String input, int startIdx) {
         if (input == null || input.isEmpty() || startIdx >= input.length() || 
             input.charAt(startIdx) != expectedChar) {
