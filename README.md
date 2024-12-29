@@ -5,7 +5,7 @@ This is a port of [Standard Clojure Style] in Java ☕
 
 ## Development
 
-Make sure [java] and [gradlew] are installed.
+Make sure [java] and [gradle] are installed.
 
 ```sh
 ## Run unit tests
