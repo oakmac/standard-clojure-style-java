@@ -35,7 +35,7 @@ public class RegexParser implements IParser {
                 matchedStr = matcher.group(0);
             }
             
-            if (matchedStr != null) {
+            if (matchedStr != null && !matchedStr.isEmpty()) {
                 return new Node(
                     matchedStr,
                     name,

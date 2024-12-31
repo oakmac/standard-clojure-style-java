@@ -1,18 +1,30 @@
 package com.oakmac.standardclojurestyle;
 
-import java.util.ArrayList;
-
 public class RepeatParser implements IParser {
-    private final IParser parser;
+    private final ParserRef parser;
     private final String name;
     private final Integer minMatches;
 
-    public RepeatParser(IParser parser, String name) {
-        this(parser, name, null);
+    // Original constructor still supported for backward compatibility
+    public RepeatParser(IParser directParser, String name) {
+        this(directParser, name, null);
     }
 
-    public RepeatParser(IParser parser, String name, Integer minMatches) {
-        this.parser = parser;
+    // Original constructor with minMatches
+    public RepeatParser(IParser directParser, String name, Integer minMatches) {
+        this.parser = new ParserRef.ParserInstanceRef(directParser);
+        this.name = name;
+        this.minMatches = minMatches;
+    }
+
+    // New constructor that takes Object for JS-like usage
+    public RepeatParser(Object parserRef, String name) {
+        this(parserRef, name, null);
+    }
+
+    // New constructor that takes Object and minMatches
+    public RepeatParser(Object parserRef, String name, Integer minMatches) {
+        this.parser = ParserDefinitions.toParserRef(parserRef);
         this.name = name;
         this.minMatches = minMatches;
     }
@@ -24,11 +36,11 @@ public class RepeatParser implements IParser {
         }
 
         int minMatchCount = (minMatches != null && minMatches > 0) ? minMatches : 0;
-        ArrayList<Node> children = new ArrayList<>();
+        java.util.ArrayList<Node> children = new java.util.ArrayList<>();
         int currentIdx = startIdx;
 
         while (true) {
-            Node node = parser.parse(input, currentIdx);
+            Node node = ParserDefinitions.getParser(parser).parse(input, currentIdx);
             if (node == null) {
                 break;
             }
