@@ -9,6 +9,7 @@ async function combineFiles(outputFile) {
     const directories = [
         path.join(projectRootDir, '../standard-clojure-style-js/lib'),
         path.join(projectRootDir, '../standard-clojure-style-js/test'),
+        path.join(projectRootDir, '../standard-clojure-style-lua/'),
         path.join(projectRootDir, 'src/main/java/com/oakmac/standardclojurestyle'),
         path.join(projectRootDir, 'src/test/java/com/oakmac/standardclojurestyle')
     ];
@@ -20,7 +21,7 @@ async function combineFiles(outputFile) {
             const files = await fs.readdir(dir);
             for (const file of files) {
                 const fileExt = path.extname(file)
-                if (fileExt === '.java' || fileExt === '.js') {
+                if (fileExt === '.java' || fileExt === '.js' || fileExt === '.lua') {
                     const filePath = path.join(dir, file);
                     const content = await fs.readFile(filePath, 'utf8');
                     combinedContent += '********* Start File: ' + file + '\n'
