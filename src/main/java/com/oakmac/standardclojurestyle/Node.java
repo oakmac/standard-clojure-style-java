@@ -35,8 +35,10 @@ public class Node {
         }
         return text; 
     }
+
     public String getName() { return name; }
     public int getStartIdx() { return startIdx; }
     public int getEndIdx() { return endIdx; }
     public Node[] getChildren() { return children; }
+    public int getNumChildren() { return numChildren; }
 }
