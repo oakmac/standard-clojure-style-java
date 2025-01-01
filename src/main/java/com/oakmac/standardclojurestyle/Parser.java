@@ -1,6 +1,7 @@
 package com.oakmac.standardclojurestyle;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +53,37 @@ public class Parser {
             endIdx = s.length();
         }
         return s.substring(startIdx, endIdx);
+    }
+
+    public static Map<String, Object> Named(final Map<String, Object> opts) {
+        Map<String, Object> parser = new HashMap<>();
+        final String name = (String)opts.get("name");
+        final Map<String, Object> childParser = (Map<String, Object>)opts.get("parser");
+        
+        parser.put("parse", (IParserFunction) (txt, pos) -> {
+            IParserFunction parserFn = (IParserFunction)childParser.get("parse");
+            Node node = parserFn.parse(txt, pos);
+            
+            if (node == null) {
+                return null;
+            } else if (node != null && node.getName() == null) {
+                // Create new node with the name instead of using setAttribute
+                Map<String, Object> nodeOpts = new HashMap<>();
+                nodeOpts.put("endIdx", node.getEndIdx());
+                nodeOpts.put("name", name);
+                nodeOpts.put("startIdx", node.getStartIdx());
+                nodeOpts.put("text", node.getText());
+                return new Node(nodeOpts);
+            } else {
+                Map<String, Object> nodeOpts = new HashMap<>();
+                nodeOpts.put("children", Arrays.asList(node));
+                nodeOpts.put("endIdx", node.getEndIdx());
+                nodeOpts.put("name", name);
+                nodeOpts.put("startIdx", node.getStartIdx());
+                return new Node(nodeOpts);
+            }
+        });
+        return parser;
     }
 
     // ---------------------------------------------------------------------------

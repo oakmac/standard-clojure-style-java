@@ -8,6 +8,63 @@ import java.util.List;
 import java.util.Map;
 
 public class ParserTest {
+
+    @Test
+    public void testNamedParser() {
+        // Create a char parser to wrap
+        Map<String, Object> charOpts = new HashMap<>();
+        charOpts.put("char", "a");
+        charOpts.put("name", "char_a");
+        Map<String, Object> charParser = Parser.Char(charOpts);
+        
+        // Create named parser wrapping the char parser
+        Map<String, Object> namedOpts = new HashMap<>();
+        namedOpts.put("name", "test_name");
+        namedOpts.put("parser", charParser);
+        Map<String, Object> namedParser = Parser.Named(namedOpts);
+        
+        IParserFunction parser = (IParserFunction)namedParser.get("parse");
+        
+        // Test successful match
+        Node result1 = parser.parse("abc", 0);
+        assertNotNull(result1, "Should parse 'a'");
+        assertEquals("test_name", result1.getName(), "Should have wrapper name");
+        assertEquals(0, result1.getStartIdx(), "Should have correct startIdx");
+        assertEquals(1, result1.getEndIdx(), "Should have correct endIdx");
+        assertEquals(1, result1.getChildren().size(), "Should have one child");
+        assertEquals("char_a", result1.getChildren().get(0).getName(), "Child should keep original name");
+        assertEquals("a", result1.getChildren().get(0).getText(), "Child should have correct text");
+        
+        // Test with unnamed parser
+        Map<String, Object> unnamedParserOpts = new HashMap<>();
+        unnamedParserOpts.put("parse", (IParserFunction) (txt, pos) -> {
+            if (txt.charAt(pos) == 'x') {
+                Map<String, Object> nodeOpts = new HashMap<>();
+                nodeOpts.put("startIdx", pos);
+                nodeOpts.put("endIdx", pos + 1);
+                nodeOpts.put("text", "x");
+                return new Node(nodeOpts);
+            }
+            return null;
+        });
+        
+        Map<String, Object> namedOpts2 = new HashMap<>();
+        namedOpts2.put("name", "test_name_2");
+        namedOpts2.put("parser", unnamedParserOpts);
+        Map<String, Object> namedParser2 = Parser.Named(namedOpts2);
+        
+        IParserFunction parser2 = (IParserFunction)namedParser2.get("parse");
+        
+        Node result2 = parser2.parse("xyz", 0);
+        assertNotNull(result2, "Should parse 'x'");
+        assertEquals("test_name_2", result2.getName(), "Should have wrapper name");
+        assertEquals("x", result2.getText(), "Should have correct text");
+        
+        // Test failed match
+        Node result3 = parser.parse("xyz", 0);
+        assertNull(result3, "Should not parse non-matching input");
+    }
+    
     @Test
     public void testCharParser() {
         Map<String, Object> opts = new HashMap<>();
