@@ -739,90 +739,104 @@ public class Parser {
         discardOpts.put("parsers", discardParsers);
         parsers.put("discard", (IParserFunction)Seq(discardOpts).get("parse"));
 
-        // // braces parser
-        // List<Map<String, Object>> bracesParsers = new ArrayList<>();
-        
-        // // First the opening brace options
-        // List<Map<String, Object>> openChoices = new ArrayList<>();
-        // openChoices.add(Char(new HashMap<String, Object>() {{
-        //     put("name", ".open");
-        //     put("char", "{");
-        // }}));
-        // openChoices.add(StringParser(new HashMap<String, Object>() {{
-        //     put("name", ".open");
-        //     put("str", "#{");
-        // }}));
-        // openChoices.add(StringParser(new HashMap<String, Object>() {{
-        //     put("name", ".open");
-        //     put("str", "#::{");
-        // }}));
-        // openChoices.add(Regex(new HashMap<String, Object>() {{
-        //     put("name", ".open");
-        //     put("regex", "#::{1,2}[a-zA-Z][a-zA-Z0-9\\.\\-_]*\\{");
-        // }}));
-        
-        // bracesParsers.add(Choice(new HashMap<String, Object>() {{
-        //     put("parsers", openChoices);
-        // }}));
-        
-        // // Then the body
-        // List<Map<String, Object>> bodyChoices = new ArrayList<>();
-        // bodyChoices.add("_gap");
-        // bodyChoices.add("_form");
-        // bodyChoices.add(NotChar(new HashMap<String, Object>() {{
-        //     put("name", "error");
-        //     put("char", "}");
-        // }}));
-        
-        // bracesParsers.add(Repeat(new HashMap<String, Object>() {{
-        //     put("name", ".body");
-        //     put("parser", Choice(new HashMap<String, Object>() {{
-        //         put("parsers", bodyChoices);
-        //     }}));
-        // }}));
-        
-        // // Finally the closing brace
-        // bracesParsers.add(Optional(Char(new HashMap<String, Object>() {{
-        //     put("name", ".close");
-        //     put("char", "}");
-        // }})));
-        
-        // parsers.put("braces", (IParserFunction)Seq(new HashMap<String, Object>() {{
-        //     put("name", "braces");
-        //     put("parsers", bracesParsers);
-        // }}).get("parse"));
+        // braces parser
+        List<Map<String, Object>> bracesParsers = new ArrayList<>();
 
-        // // brackets parser
-        // List<Map<String, Object>> bracketsParsers = new ArrayList<>();
-        // bracketsParsers.add(Char(new HashMap<String, Object>() {{
-        //     put("name", ".open");
-        //     put("char", "[");
-        // }}));
-        
-        // List<Map<String, Object>> bracketBodyChoices = new ArrayList<>();
-        // bracketBodyChoices.add("_gap");
-        // bracketBodyChoices.add("_form");
-        // bracketBodyChoices.add(NotChar(new HashMap<String, Object>() {{
-        //     put("name", "error");
-        //     put("char", "]");
-        // }}));
-        
-        // bracketsParsers.add(Repeat(new HashMap<String, Object>() {{
-        //     put("name", ".body");
-        //     put("parser", Choice(new HashMap<String, Object>() {{
-        //         put("parsers", bracketBodyChoices);
-        //     }}));
-        // }}));
-        
-        // bracketsParsers.add(Optional(Char(new HashMap<String, Object>() {{
-        //     put("name", ".close");
-        //     put("char", "]");
-        // }})));
-        
-        // parsers.put("brackets", (IParserFunction)Seq(new HashMap<String, Object>() {{
-        //     put("name", "brackets");
-        //     put("parsers", bracketsParsers);
-        // }}).get("parse"));
+        // First the opening brace options
+        List<Map<String, Object>> openChoices = new ArrayList<>();
+        openChoices.add(Char(new HashMap<String, Object>() {{
+            put("name", ".open");
+            put("char", "{");
+        }}));
+        openChoices.add(StringParser(new HashMap<String, Object>() {{
+            put("name", ".open");
+            put("str", "#{");
+        }}));
+        openChoices.add(StringParser(new HashMap<String, Object>() {{
+            put("name", ".open");
+            put("str", "#::{");
+        }}));
+        openChoices.add(Regex(new HashMap<String, Object>() {{
+            put("name", ".open");
+            put("regex", "#::{1,2}[a-zA-Z][a-zA-Z0-9\\.\\-_]*\\{");
+        }}));
+
+        bracesParsers.add(Choice(new HashMap<String, Object>() {{
+            put("parsers", openChoices);
+        }}));
+
+        // Then the body
+        List<Map<String, Object>> bodyChoices = new ArrayList<>();
+        // Instead of strings, we need to wrap these in maps with parser references
+        Map<String, Object> gapRef = new HashMap<String, Object>() {{
+            put("parse", parsers.get("_gap"));
+        }};
+        Map<String, Object> formRef = new HashMap<String, Object>() {{
+            put("parse", parsers.get("_form"));
+        }};
+        bodyChoices.add(gapRef);
+        bodyChoices.add(formRef);
+        bodyChoices.add(NotChar(new HashMap<String, Object>() {{
+            put("name", "error");
+            put("char", "}");
+        }}));
+
+        bracesParsers.add(Repeat(new HashMap<String, Object>() {{
+            put("name", ".body");
+            put("parser", Choice(new HashMap<String, Object>() {{
+                put("parsers", bodyChoices);
+            }}));
+        }}));
+
+        // Finally the closing brace
+        bracesParsers.add(Optional(Char(new HashMap<String, Object>() {{
+            put("name", ".close"); 
+            put("char", "}");
+        }})));
+
+        // Create the braces parser
+        Map<String, Object> bracesOpts = new HashMap<>();
+        bracesOpts.put("name", "braces");
+        bracesOpts.put("parsers", bracesParsers);
+        parsers.put("braces", (IParserFunction)Seq(bracesOpts).get("parse"));
+
+        // brackets parser
+        List<Map<String, Object>> bracketsParsers = new ArrayList<>();
+
+        // Opening bracket
+        bracketsParsers.add(Char(new HashMap<String, Object>() {{
+            put("name", ".open");
+            put("char", "[");
+        }}));
+
+        // Body of the brackets
+        List<Object> bracketBodyChoices = new ArrayList<>();
+        bracketBodyChoices.add("_gap");
+        bracketBodyChoices.add("_form");
+        bracketBodyChoices.add(NotChar(new HashMap<String, Object>() {{
+            put("name", "error");
+            put("char", "]");
+        }}));
+
+        Map<String, Object> choiceOpts = new HashMap<>();
+        choiceOpts.put("parsers", bracketBodyChoices);
+
+        Map<String, Object> repeatOpts = new HashMap<>();
+        repeatOpts.put("name", ".body");
+        repeatOpts.put("parser", Choice(choiceOpts));
+        bracketsParsers.add(Repeat(repeatOpts));
+
+        // Closing bracket (optional)
+        bracketsParsers.add(Optional(Char(new HashMap<String, Object>() {{
+            put("name", ".close");
+            put("char", "]");
+        }})));
+
+        // Create the brackets parser
+        Map<String, Object> bracketsOpts = new HashMap<>();
+        bracketsOpts.put("name", "brackets");
+        bracketsOpts.put("parsers", bracketsParsers);
+        parsers.put("brackets", (IParserFunction)Seq(bracketsOpts).get("parse"));
 
         // // parens parser
         // List<Map<String, Object>> parensParsers = new ArrayList<>();
