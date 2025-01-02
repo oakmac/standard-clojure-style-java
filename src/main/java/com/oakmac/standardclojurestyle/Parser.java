@@ -326,41 +326,6 @@ public class Parser {
         return null;
     }
 
-    // // NOTE: this is parsers.string implementation, not the same thing as String terminal parser above
-    // public static Map<String, Object> StringParser(Map<String, Object> opts) {
-    //     Map<String, Object> parser = new HashMap<>();
-    //     parser.put("name", opts.get("name"));
-    //     parser.put("parse", (IParserFunction) (txt, pos) -> {
-    //         // Create sequence parser for string parts
-    //         List<Map<String, Object>> parsers = new ArrayList<>();
-            
-    //         // String open quote
-    //         Map<String, Object> openQuoteOpts = new HashMap<>();
-    //         openQuoteOpts.put("regex", "^#?\"");
-    //         openQuoteOpts.put("name", ".open");
-    //         parsers.add(Regex(openQuoteOpts));
-            
-    //         // Optional string body
-    //         parsers.add(Optional(new HashMap<String, Object>() {{
-    //             put("parse", (IParserFunction) (t, p) -> stringBodyParser(t, p));
-    //         }}));
-            
-    //         // Optional closing quote
-    //         Map<String, Object> closeQuoteOpts = new HashMap<>();
-    //         closeQuoteOpts.put("char", "\"");
-    //         closeQuoteOpts.put("name", ".close");
-    //         parsers.add(Optional(Char(closeQuoteOpts)));
-            
-    //         // Create and run sequence parser
-    //         Map<String, Object> seqOpts = new HashMap<>();
-    //         seqOpts.put("name", opts.get("name"));
-    //         seqOpts.put("parsers", parsers);
-    //         return ((IParserFunction)Seq(seqOpts).get("parse")).parse(txt, pos);
-    //     });
-        
-    //     return parser;
-    // }
-
     // ---------------------------------------------------------------------------
     // Terminal Parsers
 
