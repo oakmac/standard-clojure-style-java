@@ -758,7 +758,7 @@ public class Parser {
         }}));
         openChoices.add(Regex(new HashMap<String, Object>() {{
             put("name", ".open");
-            put("regex", "#::{1,2}[a-zA-Z][a-zA-Z0-9\\.\\-_]*\\{");
+            put("regex", "#:{1,2}[a-zA-Z][a-zA-Z0-9\\.\\-_]*\\{");
         }}));
 
         bracesParsers.add(Choice(new HashMap<String, Object>() {{
@@ -766,16 +766,9 @@ public class Parser {
         }}));
 
         // Then the body
-        List<Map<String, Object>> bodyChoices = new ArrayList<>();
-        // Instead of strings, we need to wrap these in maps with parser references
-        Map<String, Object> gapRef = new HashMap<String, Object>() {{
-            put("parse", parsers.get("_gap"));
-        }};
-        Map<String, Object> formRef = new HashMap<String, Object>() {{
-            put("parse", parsers.get("_form"));
-        }};
-        bodyChoices.add(gapRef);
-        bodyChoices.add(formRef);
+        List<Object> bodyChoices = new ArrayList<>();
+        bodyChoices.add("_gap");
+        bodyChoices.add("_form");
         bodyChoices.add(NotChar(new HashMap<String, Object>() {{
             put("name", "error");
             put("char", "}");
