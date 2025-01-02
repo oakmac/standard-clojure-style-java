@@ -1,13 +1,37 @@
 package com.oakmac.standardclojurestyle;
 
-import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.Test;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.InputStream;
+import java.io.IOException;
+import java.util.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ParserTest {
+
+    // Static class to represent a test case
+    private static class TestCase {
+        private String name;
+        private String input;
+        private String expected;
+
+        // Required for Jackson deserialization
+        public TestCase() {}
+
+        // Getters and setters required for Jackson
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        
+        public String getInput() { return input; }
+        public void setInput(String input) { this.input = input; }
+        
+        public String getExpected() { return expected; }
+        public void setExpected(String expected) { this.expected = expected; }
+    }
 
     @Test
     public void testNamedParser() {
@@ -64,7 +88,7 @@ public class ParserTest {
         Node result3 = parser.parse("xyz", 0);
         assertNull(result3, "Should not parse non-matching input");
     }
-    
+
     @Test
     public void testCharParser() {
         Map<String, Object> opts = new HashMap<>();
@@ -144,7 +168,7 @@ public class ParserTest {
     }
 
     @Test
-    public void testStringParser() {
+    public void testStringTerminalParser() {
         Map<String, Object> opts = new HashMap<>();
         opts.put("str", "foo");
         opts.put("name", "string_test_foo");
@@ -386,5 +410,177 @@ public class ParserTest {
         assertEquals(1, result3.getStartIdx(), "Should have correct offset startIdx");
         assertEquals(2, result3.getEndIdx(), "Should have correct offset endIdx");
         assertEquals("a", result3.getText(), "Should have correct text");
+    }
+
+    // @Test
+    // public void testStringNodeParser() {
+    //     Map<String, Object> opts = new HashMap<>();
+    //     opts.put("name", "string");
+    //     Map<String, Object> stringParser = Parser.StringParser(opts);
+    //     IParserFunction parser = (IParserFunction)stringParser.get("parse");
+        
+    //     // Test basic string
+    //     Node result1 = parser.parse("\"hello\"", 0);
+    //     assertNotNull(result1, "Should parse basic string");
+    //     assertEquals("string", result1.getName());
+    //     assertEquals(3, result1.getChildren().size());
+    //     assertEquals(".open", result1.getChildren().get(0).getName());
+    //     assertEquals("\"", result1.getChildren().get(0).getText());
+    //     assertEquals(".body", result1.getChildren().get(1).getName());
+    //     assertEquals("hello", result1.getChildren().get(1).getText());
+    //     assertEquals(".close", result1.getChildren().get(2).getName());
+        
+    //     // Test string with escapes
+    //     Node result2 = parser.parse("\"hello\\\"world\"", 0);
+    //     assertNotNull(result2, "Should parse string with escapes");
+    //     assertEquals("hello\\\"world", result2.getChildren().get(1).getText());
+        
+    //     // Test unclosed string
+    //     Node result3 = parser.parse("\"hello", 0);
+    //     assertNotNull(result3, "Should parse unclosed string");
+    //     assertEquals(2, result3.getChildren().size());
+        
+    //     // Test empty string
+    //     Node result4 = parser.parse("\"\"", 0);
+    //     assertNotNull(result4, "Should parse empty string");
+    //     assertEquals(2, result4.getChildren().size());
+        
+    //     // Test tagged string
+    //     Node result5 = parser.parse("#\"hello\"", 0);
+    //     assertNotNull(result5, "Should parse tagged string");
+    //     assertEquals("#\"", result5.getChildren().get(0).getText());
+    // }
+
+    @Test
+    public void testRegexParser() {
+        // Test basic regex matching
+        Map<String, Object> opts1 = new HashMap<>();
+        opts1.put("regex", "^(c|d)+");
+        opts1.put("name", "foo");
+        Map<String, Object> regexTest1 = Parser.Regex(opts1);
+        IParserFunction parser1 = (IParserFunction)regexTest1.get("parse");
+
+        // Test no match at beginning of string
+        Node result1 = parser1.parse("aaacb", 0);
+        assertNull(result1, "Should not match when pattern is not at start");
+
+        // Test single character match
+        Node result2 = parser1.parse("c", 0);
+        assertNotNull(result2, "Should match single character");
+        assertEquals("foo", result2.getName());
+        assertEquals(0, result2.getStartIdx());
+        assertEquals(1, result2.getEndIdx());
+        assertEquals("c", result2.getText());
+
+        // Test multiple character match
+        Node result3 = parser1.parse("cdd", 0);
+        assertNotNull(result3, "Should match multiple characters");
+        assertEquals("foo", result3.getName());
+        assertEquals(0, result3.getStartIdx());
+        assertEquals(3, result3.getEndIdx());
+        assertEquals("cdd", result3.getText());
+
+        // Test with capture groups
+        Map<String, Object> opts2 = new HashMap<>();
+        opts2.put("regex", "^#(\\w+)");
+        opts2.put("name", "tag");
+        opts2.put("groupIdx", 0);  // capture the word after #
+        Map<String, Object> regexTest2 = Parser.Regex(opts2);
+        IParserFunction parser2 = (IParserFunction)regexTest2.get("parse");
+
+        Node result4 = parser2.parse("#hello", 0);
+        assertNotNull(result4, "Should match and capture group");
+        assertEquals("hello", result4.getText());
+        assertEquals("tag", result4.getName());
+        assertEquals(0, result4.getStartIdx());
+        assertEquals(5, result4.getEndIdx());
+
+        // Test with non-matching pattern
+        Node result5 = parser2.parse("hello", 0);
+        assertNull(result5, "Should not match when pattern doesn't match");
+
+        // Test with empty string
+        Node result6 = parser2.parse("", 0);
+        assertNull(result6, "Should not match empty string");
+
+        // Test complex pattern
+        Map<String, Object> opts3 = new HashMap<>();
+        opts3.put("regex", "^([a-z]+)\\s+([0-9]+)");
+        opts3.put("name", "complex");
+        Map<String, Object> regexTest3 = Parser.Regex(opts3);
+        IParserFunction parser3 = (IParserFunction)regexTest3.get("parse");
+
+        Node result7 = parser3.parse("abc 123", 0);
+        assertNotNull(result7, "Should match complex pattern");
+        assertEquals("abc 123", result7.getText());
+        assertEquals(0, result7.getStartIdx());
+        assertEquals(7, result7.getEndIdx());
+
+        // Test with position offset
+        Node result8 = parser1.parse("xxcdd", 2);
+        assertNotNull(result8, "Should match at offset position");
+        assertEquals("cdd", result8.getText());
+        assertEquals(2, result8.getStartIdx());
+        assertEquals(5, result8.getEndIdx());
+    }
+
+    @Test
+    public void testParserTestCases() {
+        // Load parser_tests.json from resources
+        try {
+            // Create ObjectMapper instance
+            ObjectMapper mapper = new ObjectMapper();
+            
+            // Read the JSON file into an array of TestCase objects
+            InputStream inputStream = getClass().getResourceAsStream("/parser_tests.json");
+            if (inputStream == null) {
+                fail("Could not load parser_tests.json");
+                return;
+            }
+
+            List<TestCase> testCases = mapper.readValue(
+                inputStream,
+                mapper.getTypeFactory().constructCollectionType(List.class, TestCase.class)
+            );
+
+            // Set of test cases to skip (if needed)
+            Set<String> skipTests = new HashSet<>(Arrays.asList(
+                // add test names to skip here
+            ));
+
+            // Track if we've found certain test cases for additional verification
+            Map<String, Boolean> specialTestsFound = new HashMap<>();
+            
+            // Iterate through each test case
+            for (TestCase testCase : testCases) {
+                String testName = testCase.getName();
+                
+                // Skip tests if they're in the skip set
+                if (skipTests.contains(testName)) {
+                    continue;
+                }
+                
+                String input = testCase.getInput();
+                String expected = testCase.getExpected();
+                
+                // Basic validation of test case
+                assertNotNull(testName, "Test case name should not be null");
+                assertTrue(!testName.isEmpty(), "Test case name should not be empty");
+                assertNotNull(input, "Test case input should not be null");
+                assertNotNull(expected, "Test case expected output should not be null");
+                
+                // TODO: Once Parser implementation is ready, add actual parsing and comparison here
+                // For now, just log that we're processing the test
+                System.out.println("Processing test case: " + testName);
+            }
+            
+            // Verify we found all special test cases we care about
+            for (Map.Entry<String, Boolean> entry : specialTestsFound.entrySet()) {
+                assertTrue(entry.getValue(), "Special test case not found: " + entry.getKey());
+            }
+            
+        } catch (IOException e) {
+            fail("Failed to read parser_tests.json: " + e.getMessage());
+        }
     }
 }

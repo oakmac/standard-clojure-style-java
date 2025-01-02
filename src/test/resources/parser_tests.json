@@ -3,5 +3,10 @@
     "name": "Empty Map",
     "input": "{}",
     "expected": "(source 0..2\n  (braces 0..2\n    (.open 0..1 '{')\n    (.close 1..2 '}')))"
+  },
+  {
+    "name": "Simple Map",
+    "input": "{:a 1 :b 2}",
+    "expected": "(source 0..11\n  (braces 0..11\n    (.open 0..1 '{')\n    (.body 1..10\n      (token 1..3 ':a')\n      (token 4..5 '1')\n      (token 6..8 ':b')\n      (token 9..10 '2'))\n    (.close 10..11 '}')))"
   }
 ]

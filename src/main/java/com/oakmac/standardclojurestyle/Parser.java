@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 public class Parser {
     private static int idCounter = 0;
@@ -83,6 +85,131 @@ public class Parser {
                 return new Node(nodeOpts);
             }
         });
+        return parser;
+    }
+
+    public static Map<String, Object> Regex(Map<String, Object> opts) {
+        Map<String, Object> parser = new HashMap<>();
+        final String name = (String)opts.get("name");
+        final Pattern regex = Pattern.compile((String)opts.get("regex"));
+        final Integer groupIdx = opts.containsKey("groupIdx") ? ((Number)opts.get("groupIdx")).intValue() : null;
+        
+        parser.put("name", name);
+        parser.put("parse", (IParserFunction) (txt, pos) -> {
+            // Get the substring from pos to end
+            String innerTxt = substr(txt, pos, -1);
+            
+            // Create matcher
+            Matcher matcher = regex.matcher(innerTxt);
+            
+            // Check for match at start of string
+            if (!matcher.lookingAt()) {
+                return null;
+            }
+
+            // Determine which group to use
+            String matchedStr = null;
+            if (groupIdx != null && matcher.groupCount() >= groupIdx && matcher.group(groupIdx + 1) != null) {
+                matchedStr = matcher.group(groupIdx + 1);
+            } else if (matcher.group(0) != null) {
+                matchedStr = matcher.group(0);
+            }
+
+            if (matchedStr != null) {
+                Map<String, Object> nodeOpts = new HashMap<>();
+                nodeOpts.put("endIdx", pos + matchedStr.length());
+                nodeOpts.put("name", name);
+                nodeOpts.put("startIdx", pos);
+                nodeOpts.put("text", matchedStr);
+                return new Node(nodeOpts);
+            }
+
+            return null;
+        });
+        
+        return parser;
+    }
+
+    private static Node stringBodyParser(String txt, int pos) {
+        int maxLength = txt.length();
+        if (maxLength == 0) {
+            return null;
+        }
+
+        int charIdx = pos;
+        int endIdx = -1;
+        boolean keepSearching = true;
+        StringBuilder parsedTxt = new StringBuilder();
+
+        while (keepSearching) {
+            String ch = charAt(txt, charIdx);
+            if (ch == null || ch.isEmpty()) {
+                keepSearching = false;
+            } else if (ch.equals("\\")) {
+                String nextChar = charAt(txt, charIdx + 1);
+                if (isString(nextChar) && !nextChar.isEmpty()) {
+                    parsedTxt.append(ch).append(nextChar);
+                    charIdx++;
+                } else {
+                    return null;
+                }
+            } else if (ch.equals("\"")) {
+                keepSearching = false;
+                endIdx = charIdx;
+            } else {
+                parsedTxt.append(ch);
+            }
+
+            charIdx++;
+            if (charIdx > maxLength) {
+                keepSearching = false;
+            }
+        }
+
+        if (endIdx > 0) {
+            Map<String, Object> nodeOpts = new HashMap<>();
+            nodeOpts.put("endIdx", endIdx);
+            nodeOpts.put("name", ".body");
+            nodeOpts.put("startIdx", pos);
+            nodeOpts.put("text", parsedTxt.toString());
+            return new Node(nodeOpts);
+        }
+
+        return null;
+    }
+
+    // NOTE: this is parsers.string implementation, not the same thing as String terminal parser above
+    public static Map<String, Object> StringParser(Map<String, Object> opts) {
+        Map<String, Object> parser = new HashMap<>();
+        parser.put("name", opts.get("name"));
+        parser.put("parse", (IParserFunction) (txt, pos) -> {
+            // Create sequence parser for string parts
+            List<Map<String, Object>> parsers = new ArrayList<>();
+            
+            // String open quote
+            Map<String, Object> openQuoteOpts = new HashMap<>();
+            openQuoteOpts.put("regex", "^#?\"");
+            openQuoteOpts.put("name", ".open");
+            parsers.add(Regex(openQuoteOpts));
+            
+            // Optional string body
+            parsers.add(Optional(new HashMap<String, Object>() {{
+                put("parse", (IParserFunction) (t, p) -> stringBodyParser(t, p));
+            }}));
+            
+            // Optional closing quote
+            Map<String, Object> closeQuoteOpts = new HashMap<>();
+            closeQuoteOpts.put("char", "\"");
+            closeQuoteOpts.put("name", ".close");
+            parsers.add(Optional(Char(closeQuoteOpts)));
+            
+            // Create and run sequence parser
+            Map<String, Object> seqOpts = new HashMap<>();
+            seqOpts.put("name", opts.get("name"));
+            seqOpts.put("parsers", parsers);
+            return ((IParserFunction)Seq(seqOpts).get("parse")).parse(txt, pos);
+        });
+        
         return parser;
     }
 
