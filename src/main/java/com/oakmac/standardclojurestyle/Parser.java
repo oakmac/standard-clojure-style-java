@@ -862,17 +862,9 @@ public class Parser {
         }}));
 
         // Body choices
-        List<Map<String, Object>> parenBodyChoices = new ArrayList<>();
-
-        // Create wrapper objects for the parser references
-        Map<String, Object> gapRef2 = new HashMap<>();
-        gapRef2.put("parse", parsers.get("_gap"));
-        parenBodyChoices.add(gapRef2);
-
-        Map<String, Object> formRef2 = new HashMap<>();
-        formRef2.put("parse", parsers.get("_form"));
-        parenBodyChoices.add(formRef2);
-
+        List<Object> parenBodyChoices = new ArrayList<>();
+        parenBodyChoices.add("_gap");
+        parenBodyChoices.add("_form");
         parenBodyChoices.add(NotChar(new HashMap<String, Object>() {{
             put("name", "error");
             put("char", ")");
