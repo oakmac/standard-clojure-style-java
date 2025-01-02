@@ -172,7 +172,7 @@ public class ParserTest {
         Map<String, Object> opts = new HashMap<>();
         opts.put("str", "foo");
         opts.put("name", "string_test_foo");
-        Map<String, Object> stringTest1 = Parser.String(opts);
+        Map<String, Object> stringTest1 = Parser.StringParser(opts);
         IParserFunction parser = (IParserFunction)stringTest1.get("parse");
         
         // Basic matching
