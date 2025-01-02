@@ -60,10 +60,10 @@ public class Parser {
     public static Map<String, Object> Named(final Map<String, Object> opts) {
         Map<String, Object> parser = new HashMap<>();
         final String name = (String)opts.get("name");
-        final Map<String, Object> childParser = (Map<String, Object>)opts.get("parser");
+        final Object childParser = opts.get("parser");
         
         parser.put("parse", (IParserFunction) (txt, pos) -> {
-            IParserFunction parserFn = (IParserFunction)childParser.get("parse");
+            IParserFunction parserFn = getParser(childParser);
             Node node = parserFn.parse(txt, pos);
             
             if (node == null) {
@@ -571,14 +571,16 @@ public class Parser {
      */
     public static Map<String, Object> Choice(final Map<String, Object> opts) {
         Map<String, Object> parser = new HashMap<>();
-        final List<Map<String, Object>> parsers = (List<Map<String, Object>>)opts.get("parsers");
+        final List<Object> parsers = (List<Object>)opts.get("parsers");
         
         parser.put("parse", (IParserFunction) (txt, pos) -> {
-            for (Map<String, Object> p : parsers) {
-                IParserFunction parserFn = (IParserFunction)p.get("parse");
-                Node possibleNode = parserFn.parse(txt, pos);
-                if (possibleNode != null) {
-                    return possibleNode;
+            for (Object p : parsers) {
+                IParserFunction parserFn = getParser(p);
+                if (parserFn != null) {
+                    Node possibleNode = parserFn.parse(txt, pos);
+                    if (possibleNode != null) {
+                        return possibleNode;
+                    }
                 }
             }
             return null;
@@ -591,13 +593,13 @@ public class Parser {
      */
     public static Map<String, Object> Repeat(final Map<String, Object> opts) {
         Map<String, Object> parser = new HashMap<>();
-        final Map<String, Object> childParser = (Map<String, Object>)opts.get("parser");
+        final Object childParser = opts.get("parser");
         final String name = (String)opts.get("name");
         final Integer minMatches = opts.containsKey("minMatches") ? 
             ((Number)opts.get("minMatches")).intValue() : 0;
         
         parser.put("parse", (IParserFunction) (txt, pos) -> {
-            IParserFunction parserFn = (IParserFunction)childParser.get("parse");
+            IParserFunction parserFn = getParser(childParser);
             List<Node> children = new ArrayList<>();
             int endIdx = pos;
 
@@ -719,26 +721,23 @@ public class Parser {
         commentOpts.put("name", "comment");
         parsers.put("comment", (IParserFunction)Regex(commentOpts).get("parse"));
 
-        // FIXME: this is next: we need to adjust Repeat to support getParser() with either
-        // a String or a Parser fn
-
-        // // discard parser
-        // List<Map<String, Object>> discardParsers = new ArrayList<>();
-        // Map<String, Object> markerOpts = new HashMap<>();
-        // markerOpts.put("str", "#_");
-        // markerOpts.put("name", "marker");
-        // discardParsers.add(StringParser(markerOpts));
-        // discardParsers.add(Repeat(new HashMap<String, Object>() {{ 
-        //     put("parser", "_gap");
-        // }}));
-        // discardParsers.add(Named(new HashMap<String, Object>() {{
-        //     put("name", ".body");
-        //     put("parser", "_form");
-        // }}));
-        // Map<String, Object> discardOpts = new HashMap<>();
-        // discardOpts.put("name", "discard");
-        // discardOpts.put("parsers", discardParsers);
-        // parsers.put("discard", (IParserFunction)Seq(discardOpts).get("parse"));
+        // discard parser
+        List<Map<String, Object>> discardParsers = new ArrayList<>();
+        Map<String, Object> markerOpts = new HashMap<>();
+        markerOpts.put("str", "#_");
+        markerOpts.put("name", "marker");
+        discardParsers.add(StringParser(markerOpts));
+        discardParsers.add(Repeat(new HashMap<String, Object>() {{ 
+            put("parser", "_gap");
+        }}));
+        discardParsers.add(Named(new HashMap<String, Object>() {{
+            put("name", ".body");
+            put("parser", "_form");
+        }}));
+        Map<String, Object> discardOpts = new HashMap<>();
+        discardOpts.put("name", "discard");
+        discardOpts.put("parsers", discardParsers);
+        parsers.put("discard", (IParserFunction)Seq(discardOpts).get("parse"));
 
         // // braces parser
         // List<Map<String, Object>> bracesParsers = new ArrayList<>();
