@@ -3,10 +3,12 @@ package com.oakmac.standardclojurestyle;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.Set;
 
 public class Parser {
     private static int idCounter = 0;
@@ -178,78 +180,28 @@ public class Parser {
         return null;
     }
 
-    // FIXME: we can probably change these to be Sets
-
-    // Character lookup tables for tokenParser
-    private static final Map<String, Boolean> whitespaceCharsTbl = new HashMap<String, Boolean>() {{
-        // Common chars
-        put(" ", true);
-        put(",", true);
-        put("\n", true);
-        put("\r", true);
-        put("\t", true);
-        put("\f", true);
-
+    private static final Set<String> whitespaceChars = new HashSet<>(Arrays.asList(
+        " ", ",", "\n", "\r", "\t", "\f",
         // Unicode chars
-        put("\u000B", true);
-        put("\u001C", true);
-        put("\u001D", true);
-        put("\u001E", true);
-        put("\u001F", true);
-        put("\u2028", true);
-        put("\u2029", true);
-        put("\u1680", true);
-        put("\u2000", true);
-        put("\u2001", true);
-        put("\u2002", true);
-        put("\u2003", true);
-        put("\u2004", true);
-        put("\u2005", true);
-        put("\u2006", true);
-        put("\u2008", true);
-        put("\u2009", true);
-        put("\u200a", true);
-        put("\u205f", true);
-        put("\u3000", true);
-    }};
+        "\u000B", "\u001C", "\u001D", "\u001E", "\u001F", "\u2028", "\u2029",
+        "\u1680", "\u2000", "\u2001", "\u2002", "\u2003", "\u2004", "\u2005",
+        "\u2006", "\u2008", "\u2009", "\u200a", "\u205f", "\u3000"
+    ));
 
-    private static final Map<String, Boolean> invalidTokenHeadCharsTbl = new HashMap<String, Boolean>() {{
-        put("(", true);
-        put(")", true);
-        put("[", true);
-        put("]", true);
-        put("{", true);
-        put("}", true);
-        put("\"", true);
-        put("@", true);
-        put("~", true);
-        put("^", true);
-        put(";", true);
-        put("`", true);
-        put("#", true);
-        put("'", true);
-    }};
+    private static final Set<String> invalidTokenHeadChars = new HashSet<>(Arrays.asList(
+        "(", ")", "[", "]", "{", "}", "\"", "@", "~", "^", ";", "`", "#", "'"
+    ));
 
-    private static final Map<String, Boolean> invalidTokenTailCharsTbl = new HashMap<String, Boolean>() {{
-        put("(", true);
-        put(")", true);
-        put("[", true);
-        put("]", true);
-        put("{", true);
-        put("}", true);
-        put("\"", true);
-        put("@", true);
-        put("^", true);
-        put(";", true);
-        put("`", true);
-    }};
+    private static final Set<String> invalidTokenTailChars = new HashSet<>(Arrays.asList(
+        "(", ")", "[", "]", "{", "}", "\"", "@", "^", ";", "`"
+    ));
 
     private static boolean isValidTokenHeadChar(String ch) {
-        return !whitespaceCharsTbl.containsKey(ch) && !invalidTokenHeadCharsTbl.containsKey(ch);
+        return !whitespaceChars.contains(ch) && !invalidTokenHeadChars.contains(ch);
     }
 
     private static boolean isValidTokenTailChar(String ch) {
-        return !whitespaceCharsTbl.containsKey(ch) && !invalidTokenTailCharsTbl.containsKey(ch);
+        return !whitespaceChars.contains(ch) && !invalidTokenTailChars.contains(ch);
     }
 
     private static Node tokenParser(String txt, int pos) {
@@ -308,22 +260,9 @@ public class Parser {
         return null;
     }
 
-    // Character lookup table for specialCharParser
-    private static final Map<String, Boolean> specialCharsTbl = new HashMap<String, Boolean>() {{
-        put("(", true);
-        put(")", true);
-        put("[", true);
-        put("]", true);
-        put("{", true);
-        put("}", true);
-        put("\"", true);
-        put("@", true);
-        put("^", true);
-        put(";", true);
-        put("`", true);
-        put(",", true);
-        put(" ", true);
-    }};
+    private static final Set<String> specialChars = new HashSet<>(Arrays.asList(
+        "(", ")", "[", "]", "{", "}", "\"", "@", "^", ";", "`", ",", " "
+    ));
 
     private static Node specialCharParser(String txt, int pos) {
         int maxLength = txt.length();
@@ -334,7 +273,7 @@ public class Parser {
         String firstChar = charAt(txt, pos);
         if (firstChar.equals("\\")) {
             String secondChar = charAt(txt, pos + 1);
-            if (specialCharsTbl.containsKey(secondChar)) {
+            if (specialChars.contains(secondChar)) {
                 Map<String, Object> nodeOpts = new HashMap<>();
                 nodeOpts.put("endIdx", pos + 2);
                 nodeOpts.put("name", "token");
@@ -362,7 +301,7 @@ public class Parser {
             String ch = charAt(txt, charIdx);
             if (ch == null || ch.isEmpty()) {
                 keepSearching = false;
-            } else if (whitespaceCharsTbl.containsKey(ch)) {
+            } else if (whitespaceChars.contains(ch)) {
                 parsedTxt.append(ch);
                 endIdx = charIdx;
             } else {
