@@ -1030,6 +1030,44 @@ public class Parser {
             put("name", "tagged");
             put("parsers", taggedParsers);
         }}).get("parse"));
+
+        // _form parser
+        List<String> formChoices = new ArrayList<>(Arrays.asList(
+            "token", 
+            "string", 
+            "parens", 
+            "brackets", 
+            "braces", 
+            "wrap", 
+            "meta", 
+            "tagged"
+        ));
+
+        Map<String, Object> formOpts = new HashMap<>();
+        formOpts.put("parsers", formChoices);
+        parsers.put("_form", (IParserFunction)Choice(formOpts).get("parse"));
+
+        // source parser 
+        List<Object> sourceChoices = new ArrayList<>();
+        Map<String, Object> gapRef3 = new HashMap<>();
+        gapRef3.put("parse", parsers.get("_gap"));
+        sourceChoices.add(gapRef3);
+
+        Map<String, Object> formRef3 = new HashMap<>();
+        formRef3.put("parse", parsers.get("_form")); 
+        sourceChoices.add(formRef3);
+
+        Map<String, Object> errorCharOpts = new HashMap<>();
+        errorCharOpts.put("name", "error");
+        sourceChoices.add(AnyChar(errorCharOpts));
+
+        Map<String, Object> sourceRepeatOpts = new HashMap<>();
+        sourceRepeatOpts.put("name", "source");
+        sourceRepeatOpts.put("parser", Choice(new HashMap<String, Object>() {{
+            put("parsers", sourceChoices);
+        }}));
+
+        parsers.put("source", (IParserFunction)Repeat(sourceRepeatOpts).get("parse"));
     }
 
     // Helper to get parser by name or return direct parser object
