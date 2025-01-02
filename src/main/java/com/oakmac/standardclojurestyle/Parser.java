@@ -838,176 +838,198 @@ public class Parser {
         bracketsOpts.put("parsers", bracketsParsers);
         parsers.put("brackets", (IParserFunction)Seq(bracketsOpts).get("parse"));
 
-        // // parens parser
-        // List<Map<String, Object>> parensParsers = new ArrayList<>();
-        
-        // List<Map<String, Object>> openParenChoices = new ArrayList<>();
-        // openParenChoices.add(Char(new HashMap<String, Object>() {{
-        //     put("name", ".open");
-        //     put("char", "(");
-        // }}));
-        // openParenChoices.add(Regex(new HashMap<String, Object>() {{
-        //     put("name", ".open");
-        //     put("regex", "#\\?@\\(");
-        // }}));
-        // openParenChoices.add(Regex(new HashMap<String, Object>() {{
-        //     put("name", ".open");
-        //     put("regex", "#\\?\\(");
-        // }}));
-        // openParenChoices.add(Regex(new HashMap<String, Object>() {{
-        //     put("name", ".open");
-        //     put("regex", "#=\\(");
-        // }}));
-        // openParenChoices.add(Regex(new HashMap<String, Object>() {{
-        //     put("name", ".open");
-        //     put("regex", "#\\(");
-        // }}));
-        
-        // parensParsers.add(Choice(new HashMap<String, Object>() {{
-        //     put("parsers", openParenChoices);
-        // }}));
-        
-        // List<Map<String, Object>> parenBodyChoices = new ArrayList<>();
-        // parenBodyChoices.add("_gap");
-        // parenBodyChoices.add("_form");
-        // parenBodyChoices.add(NotChar(new HashMap<String, Object>() {{
-        //     put("name", "error");
-        //     put("char", ")");
-        // }}));
-        
-        // parensParsers.add(Repeat(new HashMap<String, Object>() {{
-        //     put("name", ".body");
-        //     put("parser", Choice(new HashMap<String, Object>() {{
-        //         put("parsers", parenBodyChoices);
-        //     }}));
-        // }}));
-        
-        // parensParsers.add(Optional(Char(new HashMap<String, Object>() {{
-        //     put("name", ".close");
-        //     put("char", ")");
-        // }})));
-        
-        // parsers.put("parens", (IParserFunction)Seq(new HashMap<String, Object>() {{
-        //     put("name", "parens");
-        //     put("parsers", parensParsers);
-        // }}).get("parse"));
+        // parens parser
+        List<Map<String, Object>> parensParsers = new ArrayList<>();
 
-        // // _gap parser
-        // List<Map<String, Object>> gapChoices = new ArrayList<>();
-        // gapChoices.add("_ws");
-        // gapChoices.add("comment");
-        // gapChoices.add("discard");
-        // parsers.put("_gap", (IParserFunction)Choice(new HashMap<String, Object>() {{
-        //     put("parsers", gapChoices);
-        // }}).get("parse"));
+        // Opening paren choices first
+        List<Map<String, Object>> openParenChoices = new ArrayList<>();
+        openParenChoices.add(Char(new HashMap<String, Object>() {{
+            put("name", ".open");
+            put("char", "(");
+        }}));
+        openParenChoices.add(Regex(new HashMap<String, Object>() {{
+            put("name", ".open");
+            put("regex", "#\\?@\\(");
+        }}));
+        openParenChoices.add(Regex(new HashMap<String, Object>() {{
+            put("name", ".open");
+            put("regex", "#\\?\\(");
+        }}));
+        openParenChoices.add(Regex(new HashMap<String, Object>() {{
+            put("name", ".open");
+            put("regex", "#=\\(");
+        }}));
+        openParenChoices.add(Regex(new HashMap<String, Object>() {{
+            put("name", ".open");
+            put("regex", "#\\(");
+        }}));
 
-        // // meta parser
-        // List<Map<String, Object>> metaParsers = new ArrayList<>();
-        
-        // List<Map<String, Object>> metaSeqParsers = new ArrayList<>();
-        // metaSeqParsers.add(Regex(new HashMap<String, Object>() {{
-        //     put("name", ".marker");
-        //     put("regex", "#?\\^");
-        // }}));
-        // metaSeqParsers.add(Repeat(new HashMap<String, Object>() {{
-        //     put("parser", "_gap");
-        // }}));
-        // metaSeqParsers.add(Named(new HashMap<String, Object>() {{
-        //     put("name", ".meta");
-        //     put("parser", "_form");
-        // }}));
-        // metaSeqParsers.add(Repeat(new HashMap<String, Object>() {{
-        //     put("parser", "_gap");
-        // }}));
-        
-        // metaParsers.add(Repeat(new HashMap<String, Object>() {{
-        //     put("minMatches", 1);
-        //     put("parser", Seq(new HashMap<String, Object>() {{
-        //         put("parsers", metaSeqParsers);
-        //     }}));
-        // }}));
-        
-        // metaParsers.add(Named(new HashMap<String, Object>() {{
-        //     put("name", ".body");
-        //     put("parser", "_form");
-        // }}));
-        
-        // parsers.put("meta", (IParserFunction)Seq(new HashMap<String, Object>() {{
-        //     put("name", "meta");
-        //     put("parsers", metaParsers);
-        // }}).get("parse"));
+        parensParsers.add(Choice(new HashMap<String, Object>() {{
+            put("parsers", openParenChoices);
+        }}));
 
-        // // wrap parser
-        // List<Map<String, Object>> wrapParsers = new ArrayList<>();
-        
-        // List<Map<String, Object>> wrapMarkerChoices = new ArrayList<>();
-        // wrapMarkerChoices.add(Regex(new HashMap<String, Object>() {{
-        //     put("name", ".marker");
-        //     put("regex", "~@");
-        // }}));
-        // wrapMarkerChoices.add(Regex(new HashMap<String, Object>() {{
-        //     put("name", ".marker");
-        //     put("regex", "#'");
-        // }}));
-        // wrapMarkerChoices.add(Char(new HashMap<String, Object>() {{
-        //     put("name", ".marker");
-        //     put("char", "@");
-        // }}));
-        // wrapMarkerChoices.add(Char(new HashMap<String, Object>() {{
-        //     put("name", ".marker");
-        //     put("char", "'");
-        // }}));
-        // wrapMarkerChoices.add(Char(new HashMap<String, Object>() {{
-        //     put("name", ".marker");
-        //     put("char", "`");
-        // }}));
-        // wrapMarkerChoices.add(Char(new HashMap<String, Object>() {{
-        //     put("name", ".marker");
-        //     put("char", "~");
-        // }}));
-        
-        // wrapParsers.add(Choice(new HashMap<String, Object>() {{
-        //     put("parsers", wrapMarkerChoices);
-        // }}));
-        
-        // wrapParsers.add(Repeat(new HashMap<String, Object>() {{
-        //     put("parser", "_gap");
-        // }}));
-        
-        // wrapParsers.add(Named(new HashMap<String, Object>() {{
-        //     put("name", ".body");
-        //     put("parser", "_form");
-        // }}));
-        
-        // parsers.put("wrap", (IParserFunction)Seq(new HashMap<String, Object>() {{
-        //     put("name", "wrap");
-        //     put("parsers", wrapParsers);
-        // }}).get("parse"));
+        // Body choices
+        List<Map<String, Object>> parenBodyChoices = new ArrayList<>();
 
-        // // tagged parser
-        // List<Map<String, Object>> taggedParsers = new ArrayList<>();
-        // taggedParsers.add(Char(new HashMap<String, Object>() {{
-        //     put("char", "#");
-        // }}));
-        // taggedParsers.add(Repeat(new HashMap<String, Object>() {{
-        //     put("parser", "_gap");
-        // }}));
-        // taggedParsers.add(Named(new HashMap<String, Object>() {{
-        //     put("name", ".tag");
-        //     put("parser", "token");
-        // }}));
-        // taggedParsers.add(Repeat(new HashMap<String, Object>() {{
-        //     put("parser", "_gap");
-        // }}));
-        // taggedParsers.add(Named(new HashMap<String, Object>() {{
-        //     put("name", ".body");
-        //     put("parser", "_form");
-        // }}));
+        // Create wrapper objects for the parser references
+        Map<String, Object> gapRef2 = new HashMap<>();
+        gapRef2.put("parse", parsers.get("_gap"));
+        parenBodyChoices.add(gapRef2);
+
+        Map<String, Object> formRef2 = new HashMap<>();
+        formRef2.put("parse", parsers.get("_form"));
+        parenBodyChoices.add(formRef2);
+
+        parenBodyChoices.add(NotChar(new HashMap<String, Object>() {{
+            put("name", "error");
+            put("char", ")");
+        }}));
+
+        parensParsers.add(Repeat(new HashMap<String, Object>() {{
+            put("name", ".body");
+            put("parser", Choice(new HashMap<String, Object>() {{
+                put("parsers", parenBodyChoices);
+            }}));
+        }}));
+
+        // Optional closing paren
+        parensParsers.add(Optional(Char(new HashMap<String, Object>() {{
+            put("name", ".close");
+            put("char", ")");
+        }})));
+
+        parsers.put("parens", (IParserFunction)Seq(new HashMap<String, Object>() {{
+            put("name", "parens");
+            put("parsers", parensParsers);
+        }}).get("parse"));
+
+        // _gap parser
+        List<Map<String, Object>> gapChoices = new ArrayList<>();
+
+        // Create wrapper objects for each parser reference
+        Map<String, Object> wsRef = new HashMap<>();
+        wsRef.put("parse", parsers.get("_ws"));
+        gapChoices.add(wsRef);
+
+        Map<String, Object> commentRef = new HashMap<>();
+        commentRef.put("parse", parsers.get("comment"));
+        gapChoices.add(commentRef);
+
+        Map<String, Object> discardRef = new HashMap<>();
+        discardRef.put("parse", parsers.get("discard"));
+        gapChoices.add(discardRef);
+
+        parsers.put("_gap", (IParserFunction)Choice(new HashMap<String, Object>() {{
+            put("parsers", gapChoices);
+        }}).get("parse"));
+
+        // meta parser
+        List<Map<String, Object>> metaParsers = new ArrayList<>();
         
-        // parsers.put("tagged", (IParserFunction)Seq(new HashMap<String, Object>() {{
-        //     put("name", "tagged");
-        //     put("parsers", taggedParsers);
-        // }}).get("parse"));
+        List<Map<String, Object>> metaSeqParsers = new ArrayList<>();
+        metaSeqParsers.add(Regex(new HashMap<String, Object>() {{
+            put("name", ".marker");
+            put("regex", "#?\\^");
+        }}));
+        metaSeqParsers.add(Repeat(new HashMap<String, Object>() {{
+            put("parser", "_gap");
+        }}));
+        metaSeqParsers.add(Named(new HashMap<String, Object>() {{
+            put("name", ".meta");
+            put("parser", "_form");
+        }}));
+        metaSeqParsers.add(Repeat(new HashMap<String, Object>() {{
+            put("parser", "_gap");
+        }}));
+        
+        metaParsers.add(Repeat(new HashMap<String, Object>() {{
+            put("minMatches", 1);
+            put("parser", Seq(new HashMap<String, Object>() {{
+                put("parsers", metaSeqParsers);
+            }}));
+        }}));
+        
+        metaParsers.add(Named(new HashMap<String, Object>() {{
+            put("name", ".body");
+            put("parser", "_form");
+        }}));
+        
+        parsers.put("meta", (IParserFunction)Seq(new HashMap<String, Object>() {{
+            put("name", "meta");
+            put("parsers", metaParsers);
+        }}).get("parse"));
+
+        // wrap parser
+        List<Map<String, Object>> wrapParsers = new ArrayList<>();
+        
+        List<Map<String, Object>> wrapMarkerChoices = new ArrayList<>();
+        wrapMarkerChoices.add(Regex(new HashMap<String, Object>() {{
+            put("name", ".marker");
+            put("regex", "~@");
+        }}));
+        wrapMarkerChoices.add(Regex(new HashMap<String, Object>() {{
+            put("name", ".marker");
+            put("regex", "#'");
+        }}));
+        wrapMarkerChoices.add(Char(new HashMap<String, Object>() {{
+            put("name", ".marker");
+            put("char", "@");
+        }}));
+        wrapMarkerChoices.add(Char(new HashMap<String, Object>() {{
+            put("name", ".marker");
+            put("char", "'");
+        }}));
+        wrapMarkerChoices.add(Char(new HashMap<String, Object>() {{
+            put("name", ".marker");
+            put("char", "`");
+        }}));
+        wrapMarkerChoices.add(Char(new HashMap<String, Object>() {{
+            put("name", ".marker");
+            put("char", "~");
+        }}));
+        
+        wrapParsers.add(Choice(new HashMap<String, Object>() {{
+            put("parsers", wrapMarkerChoices);
+        }}));
+        
+        wrapParsers.add(Repeat(new HashMap<String, Object>() {{
+            put("parser", "_gap");
+        }}));
+        
+        wrapParsers.add(Named(new HashMap<String, Object>() {{
+            put("name", ".body");
+            put("parser", "_form");
+        }}));
+        
+        parsers.put("wrap", (IParserFunction)Seq(new HashMap<String, Object>() {{
+            put("name", "wrap");
+            put("parsers", wrapParsers);
+        }}).get("parse"));
+
+        // tagged parser
+        List<Map<String, Object>> taggedParsers = new ArrayList<>();
+        taggedParsers.add(Char(new HashMap<String, Object>() {{
+            put("char", "#");
+        }}));
+        taggedParsers.add(Repeat(new HashMap<String, Object>() {{
+            put("parser", "_gap");
+        }}));
+        taggedParsers.add(Named(new HashMap<String, Object>() {{
+            put("name", ".tag");
+            put("parser", "token");
+        }}));
+        taggedParsers.add(Repeat(new HashMap<String, Object>() {{
+            put("parser", "_gap");
+        }}));
+        taggedParsers.add(Named(new HashMap<String, Object>() {{
+            put("name", ".body");
+            put("parser", "_form");
+        }}));
+        
+        parsers.put("tagged", (IParserFunction)Seq(new HashMap<String, Object>() {{
+            put("name", "tagged");
+            put("parsers", taggedParsers);
+        }}).get("parse"));
     }
 
     // Helper to get parser by name or return direct parser object
