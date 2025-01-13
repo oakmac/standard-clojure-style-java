@@ -17,6 +17,9 @@ Make sure [java] and [gradle] are installed.
 
 ## clean the build
 ./gradlew clean
+
+## format files
+./gradlew googleJavaFormat
 ```
 
 [java]:https://openjdk.org/
