@@ -11,6 +11,7 @@ Make sure [java] and [gradle] are installed.
 ```sh
 ## Run unit tests
 ./gradlew test
+./gradlew test --info
 
 ## build the project
 ./gradlew build
