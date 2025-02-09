@@ -67,6 +67,10 @@ public class ParseNsTest {
           new HashSet<>(
               Arrays.asList(
                   // add test cases to skip here
+
+                  // FIXME: this is the next step: get this test case to pass
+                  // "GitHub Issue #152 - :use in the ns form should error"
+                
                   ));
 
       // Process each test case
